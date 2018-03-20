@@ -43,7 +43,7 @@ pip install -r requirements.txt
 jupyter notebook
 ```
 
-Along with the /env folder that you have just created, you should see three notebooks (.ipynb files), a requirements.txt file, and a sample_dataset.csv file. If you have no prior jupyter notebook experience, I recommend starting by opening the **startup_notebook.ipynb** file and running through the steps. Otherwise, the **dash_analysis.ipynb** notebook is the best place to start.
+Along with the /env folder that you have just created, you should see this README.md file, three notebooks (.ipynb files), a requirements.txt file, and a sample_dataset.csv file. If you have no prior jupyter notebook experience, I recommend starting by opening the **startup_notebook.ipynb** file and running through the steps. Otherwise, the **dash_analysis.ipynb** notebook is the best place to start.
 
 ## Built With
 
