@@ -5,11 +5,12 @@ import dash_core_components as dcc
 import plotly.offline as py
 import pandas as pd
 import numpy as np
+from plotly.widgets import GraphWidget
 from datetime import datetime, timedelta
 from pandas.api.types import is_string_dtype
-
-import seaborn as sns
-import matplotlib.pyplot as plt
+from ipywidgets import interact, interactive, fixed
+import ipywidgets as widgets
+from plotly import tools
 from pandas.io import gbq
 
 import plotly
@@ -21,8 +22,10 @@ import plotly.graph_objs as go
 app = dash.Dash('Dash for EdX Analysis')
 
 #df = pd.read_csv('sample_data/data_person_course.csv')
-#sasby = pd.read_csv('sample_data/data_show_ans_stat_by_user.csv')
 #pcd = pd.read_csv('sample_data/data_person_course_day.csv')
+#sasby = pd.read_csv('sample_data/data_show_ans_stat_by_user.csv')
+
+# BIGQUERY
 
 bgq_key = pd.read_csv('bgq_key.csv')
 bgq_key = str(bgq_key.bgq_key)
@@ -31,46 +34,55 @@ bgq_key = str(bgq_key[5:24])
 project_id=bgq_key
 
 quantiles = """SELECT *
-    FROM `deidentified_data.person_course`"""
+FROM `deidentified_data.person_course`"""
 df = gbq.read_gbq(query=quantiles, dialect ='standard', project_id=project_id)
 
 quantiles = """SELECT *
-    FROM `deidentified_data.person_course_day`"""
+FROM `deidentified_data.person_course_day`"""
 pcd = gbq.read_gbq(query=quantiles, dialect ='standard', project_id=project_id)
 
 quantiles = """SELECT *
-    FROM `deidentified_data.show_ans_stat_by_user`"""
+FROM `deidentified_data.show_ans_stat_by_user`"""
 sasby = gbq.read_gbq(query=quantiles, dialect ='standard', project_id=project_id)
 
 
-def add_markers( figure_data, users, plot_type = 'scatter' ):
-    indices = []
+def add_markers( figure_data ):
+    index = 0
     user_data = figure_data[0]
-    for x in users:        
-        hover_text = user_data['text']
-        for i in range(len(hover_text)):
-            if x == hover_text[i]:
-                indices.append(i)
+    print(user_data)
+    index = user_data
+
+    index = dict(
+        marker = dict( 
+            color = 'red', 
+            size = 16,
+            opacity = 0.6
+            ),
+        type = plot_type
+        )
+
     
     if plot_type == 'histogram2d':
         plot_type = 'scatter'
+    
+    return index
 
 
 BACKGROUND = 'rgb(230, 230, 230)'
 
-COLORSCALE = [ [0, "rgb(244,236,21)"], [0.3, "rgb(249,210,41)"], [0.4, "rgb(134,191,118)"],
-              [0.5, "rgb(37,180,167)"], [0.65, "rgb(17,123,215)"], [1, "rgb(157, 48, 165)"] ]
+COLORSCALE = [ [0, "rgb(244,236,21)"], [0.3, "rgb(249,210,41)"], [0.4, "rgb(134,191,118)"], 
+                [0.5, "rgb(37,180,167)"], [0.65, "rgb(17,123,215)"], [1, "rgb(157, 48, 165)"] ]
+
 
 def scatter_plot_2d( 
         x = ((df['nseek_video']+ df['npause_video'])*df['nvideos_total_watched']), 
-        y = (df['nshow_answer']*(sasby['n_partial'])), 
-        #size = sasby['n_perfect'],
-        color = ((sasby['n_attempted'] - sasby['n_partial'])/ sasby['n_attempted'] * 100),
+        y = df['nshow_answer'],
+        color = df['nevents'],    
         xlabel = 'video events',
         ylabel = 'nshow_answer',
         title='All Users',
         plot_type = 'scatter',
-        markers = [] ):
+        marker = '' ):
 
     def axis_template_2d(title):
         return dict(
@@ -93,15 +105,18 @@ def scatter_plot_2d(
         mode = 'markers',
         marker = dict( 
                 colorscale = COLORSCALE,
-                colorbar = dict( title = "incorrect problems" ),
+                colorbar = dict( title = "% incorrect problems"),
                 line = dict( color = '#444' ),
                 reversescale = True,   
                 #sizeref = 10,
                 sizemode = 'diameter',
                 opacity = 0.7,                
                 size = 12,    
-                color = color,
+                color = color
             ),
+        selected = dict(
+                   marker = dict(
+                            color = 'red')),
         text = df['user_id'],
         type = plot_type,      
     ) ]
@@ -112,7 +127,7 @@ def scatter_plot_2d(
             title='video events',
             type='log'),
         yaxis = dict(
-            title='nshow_answer * n_partial'),
+            title='nshow_answer'),
         hovermode = 'closest',
         margin = dict( r=0, t=0, l=0, b=0 ),
         showlegend = False,
@@ -145,15 +160,13 @@ def scatter_plot_2d(
         layout['font']['color'] = 'white'
         layout['title'] = 'All Users'
     
-    #if len(markers) > 0:
-        #data = data + add_markers( data, markers, plot_type = plot_type )
     layout = go.Layout(title = 'All Users',
-                       xaxis=dict(
+                      xaxis=dict(
                            title='video events',
                            type = 'log'),
                        yaxis=dict(
-                           title='nshow_answer * n_perfect',
-                                  type = 'log'),
+                           title='nshow_answer * correct problems',
+                           type = 'log'),
                       hovermode = 'closest')
     
     return dict( data=data, layout=layout )
@@ -162,16 +175,13 @@ def scatter_plot_2d(
 def simple_donut(uid):
     user = sasby[sasby.user_id==int(uid)]
     current_user = user.groupby('user_id').sum().reset_index()
-    
-    #print sasby.isna().sum()
-    #print current_user.n_attempted.tolist()
-    #print type(int(current_user.n_attempted[0]))
-    attempted = int(current_user.n_attempted)
+
+    attempted = int(current_user.n_attempted[0])
     
     hoverinfo = 'label+percent+name'
     hole = 0.4
         
-    incorrect = int(current_user.n_attempted) - int(current_user.n_partial)
+    incorrect = int(current_user.n_attempted[0]) - int(current_user.n_partial[0])
     partially_correct = int(current_user.n_partial) - int(current_user.n_perfect)
     correct = int(current_user.n_perfect)
     
@@ -228,27 +238,15 @@ def simple_donut(uid):
     data = [trace1,trace2]
     
     return dict(data = data, layout = layout)
-    
+
 
 def barchart(uid):
     
     user = sasby[sasby.user_id==int(uid)]
     current_user = user.groupby('user_id').sum().reset_index()
     
-    attempted = int(current_user.n_attempted)
+    attempted = float(current_user.n_attempted)
 
-    """
-    incorrect = int(current_user.n_attempted) - int(current_user.n_partial)
-    partially_correct = int(current_user.n_partial) - int(current_user.n_perfect)
-    correct = int(current_user.n_perfect)
-    
-    sa_incorrect = int(current_user.n_show_answer_attempted) - int(current_user.n_show_answer_partial)
-    sa_partially_correct = int(current_user.n_show_answer_partial) - int(current_user.n_show_answer_perfect)
-    sa_correct = int(current_user.n_show_answer_perfect)
-    
-    #print sa_incorrect,sa_correct, sa_partially_correct
-    #print incorrect, correct, partially_correct
-    """
     incorrect = float(current_user.n_attempted) - float(current_user.n_partial)
     partially_correct = float(current_user.n_partial) - float(current_user.n_perfect)
     correct = float(current_user.n_perfect)
@@ -285,7 +283,9 @@ def barchart(uid):
     avg_pct_sa_partially_correct = int((avg_sa_partially_correct / avg_partially_correct) * 100)
     avg_pct_sa_correct = int((avg_sa_correct / avg_correct) * 100)
     avg_pct_sa_incorrect = int((avg_sa_incorrect / avg_incorrect) * 100)
+
     
+ 
     xlabels = ['Correct Problems', 'Partially Correct Problems', 'Incorrect Problems']
     trace1 = go.Bar(
     x=xlabels,
@@ -326,8 +326,9 @@ while count < 745:
 
 total = pcd.groupby('date').mean()
 
-def update(uid):
 
+def update(uid):
+    
     for x in user_array:
         if x[1] == int(uid):
             uname = (x[0])
@@ -438,78 +439,80 @@ TIMESERIES = update(STARTING_USER)
 USER_DESCRIPTION = df.loc[df['user_id'] == STARTING_USER].iloc[0]
 
 app.layout = dhc.Div([
-                      dhc.Link(
-                               rel="stylesheet",
-                               href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
-                               ),
-                      dhc.Link(
-                               rel="stylesheet",
-                               href="//fonts.googleapis.com/css?family=Raleway:400,300,600"
-                               ),
-                      
-                      # Row 1: Header and Intro text
-                      
-                      dhc.Div([
-                               
-                               dhc.Div([
-                                        dhc.H2('Dash for EdX Analysis'),
-                                        dhc.P('SELECT a user in the dropdown menu or from the graph.'),
-                                        ], className="col-md-6" ),
-                               
-                               dhc.Div([
-                                        dhc.Br(),
-                                        dcc.Dropdown(id='user_dropdown',
-                                                     multi=False,
-                                                     value=STARTING_USER,
-                                                     options=[{'label': i, 'value': i} for i in df['user_id'].tolist()]),
-                                        ], className="col-md-6" )
-                               ], className='container' ),
-                      
-                      
-                      # Row 2: Hover Panel and Graph
-                      
-                      dhc.Div([
-                               
-                               dhc.Div([
-                                        
-                                        
-                                        dcc.Graph(id='clickable-graph',
-                                                  style=dict(height='700px'),
-                                                  clickData=dict( points=[dict(pointNumber=0)] ),
-                                                  figure=FIGURE ),
-                                        
-                                        ], className='col-md-7'),
-                               
-                               dhc.Div([
-                                        
-                                        #dhc.H4(id='user_name'),
-                                        #href=df['user_id'], 
-                                        #target="_blank"),
-                                        
-                                        dcc.Graph(id='donut-graph', 
-                                                  style=dict(height='300px'),
-                                                  #hoverData=dict( points=[dict(pointNumber=0)] ),
-                                                  figure=SIDE_PLOT ),
-                                        
-                                        dhc.P('The darker-colored donut chart and bars represent the individual user - the lighter-colored ones represent the average.'),
-                                        
-                                        dcc.Graph(id='bar-chart',
-                                                  style=dict(height='300px'),
-                                                  figure=BAR_CHART
-                                                  ),
-                                        ], className="col-md-5") 
-                               
-                               ], className='container'),
-                      
-                      
-                      dhc.Div([
-                               dcc.Graph(id='timeseries-graph', 
-                                         #style=dict(width='1100px'),
-                                         #hoverData=dict( points=[dict(pointNumber=0)] ),
-                                         figure=TIMESERIES )
-                               ])
-                      
-                      ], className = 'container')
+    dhc.Link(
+        rel="stylesheet",
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+    ),     
+    dhc.Link(
+        rel="stylesheet",
+        href="//fonts.googleapis.com/css?family=Raleway:400,300,600"
+    ),
+
+    # Row 1: Header and Intro text
+        
+    dhc.Div([
+                
+        dhc.Div([
+            dhc.H2('Dash for EdX Analysis'),
+            dhc.P('SELECT a user in the dropdown menu or from the graph.'),                        
+            ], className="col-md-6" ),
+        
+        dhc.Div([
+            dhc.Br(),
+            dcc.Dropdown(id='user_dropdown', 
+                        multi=False,
+                        value=STARTING_USER,
+                        options=[{'label': i, 'value': i} for i in df['user_id'].tolist()]),
+            ], className="col-md-6" )
+    ], className='container' ),
+
+
+    # Row 2: Hover Panel and Graph
+      
+    dhc.Div([
+        
+        dhc.Div([           
+            
+            
+            dcc.Graph(id='clickable-graph', 
+                      style=dict(height='600px'),
+                      #figure=FIGURE,
+                      clickData=dict( points=[dict(pointNumber=0)] )),                                            
+                        
+        ], className='col-md-7'),
+        
+        dhc.Div([ 
+            
+            #dhc.H4(id='user_name'),
+                   #href=df['user_id'], 
+                   #target="_blank"),
+            
+            dcc.Graph(id='donut-graph', 
+                      style=dict(height='300px'),
+                      #hoverData=dict( points=[dict(pointNumber=0)] ),
+                      figure=SIDE_PLOT ),
+            
+            dhc.P('The darker-colored donut chart and bars represent the individual user - the lighter-colored ones represent the average.'),
+            
+            dcc.Graph(id='bar-chart',
+                     style=dict(height='300px'),
+                      figure=BAR_CHART
+                     ),
+        ], className="col-md-5") 
+                
+    ], className='container'),
+
+    
+    dhc.Div([
+        dcc.Graph(id='timeseries-graph', 
+                  #style=dict(width='1100px'),
+                  #hoverData=dict( points=[dict(pointNumber=0)] ),
+                  figure=TIMESERIES )
+    ])
+            
+], className = 'container')
+
+
 @app.callback( 
     Output('user_dropdown', 'value'),
     [Input('clickable-graph', 'clickData')])
@@ -520,7 +523,9 @@ def return_user( clickData ):
             if 'pointNumber' in firstPoint:
                 point_number = firstPoint['pointNumber']
                 user_name = str(FIGURE['data'][0]['text'][point_number]).strip()
+                print(user_name)
                 return user_name
+
 
 @app.callback( 
     Output('donut-graph', 'figure'),
@@ -529,6 +534,7 @@ def user_donuts( user_dropdown_value ):
     donut = simple_donut( user_dropdown_value )
     return donut
 
+
 @app.callback( 
     Output('bar-chart', 'figure'),
     [Input('user_dropdown', 'value')])
@@ -536,11 +542,68 @@ def user_bar( user_dropdown_value ):
     bar = barchart( user_dropdown_value )
     return bar
 
+
 @app.callback( 
     Output('clickable-graph', 'figure'),
     [Input('user_dropdown', 'value')])
-def highlight_user( user_dropdown_values ):
-    return scatter_plot_2d( markers = user_dropdown_values )
+def highlight_user( user_dropdown_value ):
+
+    traces = [go.Scatter(
+            x = ((df['nseek_video']+ df['npause_video'])*df['nvideos_total_watched']), 
+            y = df['nshow_answer'], 
+            text=df['user_id'],
+            name='User',
+            mode='markers',
+            marker={
+                'size': 15,
+                'opacity': 0.5,
+                'colorscale' : 'Viridis',
+                'reversescale' : True,
+                'color' : df['nevents'],
+                'colorbar' : dict( title = "nevents"),
+            }
+        )]
+    
+    if user_dropdown_value is not None:
+        
+        print("userID: ", user_dropdown_value)
+        row = df.loc[df['user_id']==int(user_dropdown_value)]
+        #sasrow = sasby.loc[sasby['user_id']==int(user_dropdown_value)]
+
+        trace_selected = go.Scatter(
+            x = [((row['nseek_video']+row['npause_video'])*row['nvideos_total_watched']).iloc[0]],
+            y = [row['nshow_answer'].iloc[0]],
+            text=user_dropdown_value,
+            showlegend=False,
+            name='Selected',
+            mode='markers',
+            marker={
+                'size': 15,
+                'opacity': 1.0,
+                'color' : 'black',
+                'symbol' : 'x-open'
+            }
+        )
+        traces.append(trace_selected)
+    return {
+        'data': traces,
+        'layout': go.Layout(
+            title='All Users',
+            showlegend=False,
+            xaxis={
+                'title': 'video events',
+                'type': 'log'
+            },
+            yaxis={
+                'title': 'nshow_answer',
+                'type': 'log'
+            },
+            margin={'l': 40, 'b': 40, 't': 0, 'r': 0},
+            #height=450,
+            hovermode='closest'
+        )
+    }
+
 
 @app.callback(
     Output('timeseries-graph', 'figure'),
@@ -548,6 +611,7 @@ def highlight_user( user_dropdown_values ):
 def timeseries( user_dropdown_value ):
     timechart = update( user_dropdown_value )
     return timechart 
+
 
 def dfRowFromClick( clickData ):
     ''' Returns row for hover point as a Pandas Series '''
@@ -558,6 +622,7 @@ def dfRowFromClick( clickData ):
                 point_number = firstPoint['pointNumber']
                 user_name = str(FIGURE['data'][0]['text'][point_number]).strip()
                 return df.loc[df['user_id'] == user_name]
+    print(pd.Series())
     return pd.Series()
 
 

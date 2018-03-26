@@ -11,7 +11,7 @@ These instructions will help you to install a working copy of the notebook on yo
 
 1. First, you will need to **download** this master file onto your computer. Do this by clicking on the green **'Clone or download'** button above and then hitting **'Download ZIP'**.
 
-2. You should be able to locate the edx_analysis-master folder in your recent downloads. I recommend moving the folder to your desktop for ease of access. You will need to create a **virtual environment** for the project. If you have never used python on your computer, I recommend following the steps below. Otherwise, you can jump ahead to step 3. 
+2. You should be able to locate the edx_analysis-master folder in your recent downloads. I recommend moving the folder to your desktop for ease of access. You will need to create a **virtual environment** for the project. If you have never used Python on your computer, I recommend following the steps below. Otherwise, you can jump ahead to step 3. 
 
 To install pip, you will need to run the get-pip.py script. To do this, open your terminal window and type the following command:
 
@@ -50,7 +50,9 @@ source env/bin/activate
 pip install -r requirements.txt
 ```
 
-### Running the notebook
+### Running the notebook and dashboard
+
+If you would like to run the notebook as well as the dashboard, I recommend starting with step 1. This will install the notebook and give you access to all of the code. If you are only interested in running the dashboard application without the jupyter notebook, skip ahead to step 2.
 
 1. To run the notebook, type:
 
@@ -59,6 +61,12 @@ jupyter notebook
 ```
 
 Along with the /env folder that you have just created, you should see this README.md file, three notebooks (.ipynb files), a requirements.txt file, and a sample_dataset.csv file. If you have no prior jupyter notebook experience, I recommend starting by opening the **startup_notebook.ipynb** file and running through the steps. Otherwise, the **dash_analysis.ipynb** notebook is the best place to start.
+
+2. To run the dashboard application, make sure your environment is activated (env) and type the following command:
+
+```
+python app.py
+```
 
 ## Built With
 
