@@ -26,9 +26,9 @@ To install pip, you will need to run the get-pip.py script. To do this, open you
 sudo python get-pip.py
 ```
 
-Installing pip is often dependent on the version of python running on your computer as well as what other programs might be operating in the background. As such, we have included the source file [here](https://pip.pypa.io/en/stable/installing/) as well as some [additional documentation](https://stackoverflow.com/questions/17271319/how-do-i-install-pip-on-macos-or-os-x).  
+Installing pip is often dependent on the version of python running on your computer as well as what other programs might be operating in the background. You may encounter some errors, so we have included the source file [here](https://pip.pypa.io/en/stable/installing/) as well as some [additional documentation](https://stackoverflow.com/questions/17271319/how-do-i-install-pip-on-macos-or-os-x).  
 
-**Note:** the sudo command is a super user command. It allows you to run commands not executable by a regular user. As such, the first time you use the sudo command, it will probably prompt you to enter your computer password. 
+**Note:** the sudo command is a super user command. It allows you to run commands not executable by a regular user. The first time you use the sudo command, it will likely prompt you to enter your computer password. 
 
 4. After installing pip, you will need to install the virtual environments package:
 
