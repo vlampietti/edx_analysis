@@ -26,9 +26,9 @@ A virtual environment allows you to keep a separate copy of python and whatever 
 sudo pip install virtualenv
 ```
 
-3. Next, you will need to **download** this master file onto your computer. Do this by clicking on the green **'Clone or download'** button above and then hitting **'Download ZIP'**.
+3. Next, you will need to **download** this master file onto your computer. Do this by clicking on the green **'Clone or download'** button at the top of the page and then hitting **'Download ZIP'**.
 
-4. You should be able to locate the edx_analysis-master folder in your recent downloads. I recommend moving the folder to your desktop for ease of access. Once you have moved the folder onto your desktop, you can move into the folder by opening your terminal window and typing the following command:
+4. You should be able to locate the **edx_analysis-master** folder in your recent downloads. I recommend moving the folder to your desktop for ease of access. Once you have moved the folder onto your desktop, you can move into the folder by opening your terminal window and typing the following command:
 
 ```
 cd Desktop/edx_analysis-master
@@ -72,7 +72,7 @@ If you would like to run the notebook as well as the dashboard, I recommend star
 jupyter notebook
 ```
 
-Along with the /env folder that you have just created, you should see this README.md file, three notebooks (.ipynb files), a requirements.txt file, and a sample_dataset.csv file. If you have no prior jupyter notebook experience, I recommend starting by opening the **startup_notebook.ipynb** file and running through the steps. Otherwise, the **dash_analysis.ipynb** notebook is the best place to start.
+Along with the /env folder that you have just created, you should see this README.md file, three notebooks (.ipynb files), two python scripts (.py files), a requirements.txt file, and a sample_dataset.csv file. If you have no prior jupyter notebook experience, I recommend starting by opening the **startup_notebook.ipynb** file and running through the steps. Otherwise, the **dash_analysis.ipynb** notebook is the best place to start.
 
 3. To run the dashboard application, make sure your environment is activated (env) and type the following command:
 
