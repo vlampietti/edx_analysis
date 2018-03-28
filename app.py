@@ -25,8 +25,6 @@ app = dash.Dash('Dash for EdX Analysis')
 #pcd = pd.read_csv('sample_data/data_person_course_day.csv')
 #sasby = pd.read_csv('sample_data/data_show_ans_stat_by_user.csv')
 
-# BIGQUERY
-
 bgq_key = pd.read_csv('bgq_key.csv')
 bgq_key = str(bgq_key.bgq_key)
 bgq_key = str(bgq_key[5:24])
@@ -76,11 +74,8 @@ COLORSCALE = [ [0, "rgb(244,236,21)"], [0.3, "rgb(249,210,41)"], [0.4, "rgb(134,
 
 def scatter_plot_2d(
         x = sasby['n_attempted'], 
-        #x = ((df['nseek_video']+ df['npause_video'])*df['nvideos_total_watched']), 
         y = sasby['n_show_answer_attempted'],
-        #y = df['nshow_answer'],
         color = (sasby['n_partial'] - sasby['n_perfect']),
-        #color = df['nevents'],    
         xlabel = 'attempted problems',
         ylabel = 'nshow_answer',
         title='All Users',
@@ -121,7 +116,6 @@ def scatter_plot_2d(
                    marker = dict(
                             color = 'red')),
         text = sasby['user_id'],
-        #text = df['user_id'],
         type = plot_type,      
     ) ]
     
@@ -480,20 +474,14 @@ app.layout = dhc.Div([
             
             dcc.Graph(id='clickable-graph', 
                       style=dict(height='600px'),
-                      #figure=FIGURE,
                       clickData=dict( points=[dict(pointNumber=0)] )),                                            
                         
         ], className='col-md-7'),
         
         dhc.Div([ 
             
-            #dhc.H4(id='user_name'),
-                   #href=df['user_id'], 
-                   #target="_blank"),
-            
             dcc.Graph(id='donut-graph', 
                       style=dict(height='300px'),
-                      #hoverData=dict( points=[dict(pointNumber=0)] ),
                       figure=SIDE_PLOT ),
             
             dhc.P('The darker-colored donut chart and bars represent the individual user - the lighter-colored ones represent the average.'),
@@ -509,8 +497,6 @@ app.layout = dhc.Div([
     
     dhc.Div([
         dcc.Graph(id='timeseries-graph', 
-                  #style=dict(width='1100px'),
-                  #hoverData=dict( points=[dict(pointNumber=0)] ),
                   figure=TIMESERIES )
     ])
             
@@ -554,11 +540,8 @@ def highlight_user( user_dropdown_value ):
 
     traces = [go.Scatter(
             x = sasby['n_attempted'],
-            #x = ((df['nseek_video']+ df['npause_video'])*df['nvideos_total_watched']), 
             y = sasby['n_show_answer_attempted'],
-            #y = df['nshow_answer'],
             text = sasby['user_id'], 
-            #text=df['user_id'],
             name='User',
             mode='markers',
             marker={
@@ -567,7 +550,6 @@ def highlight_user( user_dropdown_value ):
                 'colorscale' : COLORSCALE,
                 'reversescale' : True,
                 'color': (sasby['n_partial'] - sasby['n_perfect']),
-                #'color' : df['nevents'],
                 'colorbar' : dict( title = "incorrect problems"),
             }
         )]
@@ -575,14 +557,11 @@ def highlight_user( user_dropdown_value ):
     if user_dropdown_value is not None:
         
         print("userID: ", user_dropdown_value)
-        #row = df.loc[df['user_id']==int(user_dropdown_value)]
         sasrow = sasby.loc[sasby['user_id']==int(user_dropdown_value)]
 
         trace_selected = go.Scatter(
             x = [sasrow['n_attempted'].iloc[0]],
-            #x = [((row['nseek_video']+row['npause_video'])*row['nvideos_total_watched']).iloc[0]],
             y = [sasrow['n_show_answer_attempted'].iloc[0]],
-            #y = [row['nshow_answer'].iloc[0]],
             text=user_dropdown_value,
             showlegend=False,
             name='Selected',

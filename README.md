@@ -4,7 +4,7 @@ This is an analysis of EdX student data done on Jupyter Notebook using the [Plot
 
 ## Getting Started
 
-These instructions will help you install a working copy of the notebook on your machine.
+These instructions will help you install a working copy of the notebook on your machine. The datasets are not included in this repository, so you will have to either a) link your application to a cloud database (I use Google BigQuery) or b) load csv files into your application folder.
 
 ### Setting up the environment:
 
@@ -79,6 +79,14 @@ Along with the /env folder that you have just created, you should see this READM
 ```
 python app.py
 ```
+
+There is also a simple dash application under startup_dash.py that you can run by typing:
+
+```
+startup_dash.py
+```
+
+This is a simple way of understanding the backend of dash without all of the additional code. 
 
 ## Built With
 
