@@ -74,11 +74,14 @@ COLORSCALE = [ [0, "rgb(244,236,21)"], [0.3, "rgb(249,210,41)"], [0.4, "rgb(134,
                 [0.5, "rgb(37,180,167)"], [0.65, "rgb(17,123,215)"], [1, "rgb(157, 48, 165)"] ]
 
 
-def scatter_plot_2d( 
-        x = ((df['nseek_video']+ df['npause_video'])*df['nvideos_total_watched']), 
-        y = df['nshow_answer'],
-        color = df['nevents'],    
-        xlabel = 'video events',
+def scatter_plot_2d(
+        x = sasby['n_attempted'], 
+        #x = ((df['nseek_video']+ df['npause_video'])*df['nvideos_total_watched']), 
+        y = sasby['n_show_answer_attempted'],
+        #y = df['nshow_answer'],
+        color = (sasby['n_partial'] - sasby['n_perfect']),
+        #color = df['nevents'],    
+        xlabel = 'attempted problems',
         ylabel = 'nshow_answer',
         title='All Users',
         plot_type = 'scatter',
@@ -105,7 +108,7 @@ def scatter_plot_2d(
         mode = 'markers',
         marker = dict( 
                 colorscale = COLORSCALE,
-                colorbar = dict( title = "% incorrect problems"),
+                colorbar = dict( title = "incorrect problems"),
                 line = dict( color = '#444' ),
                 reversescale = True,   
                 #sizeref = 10,
@@ -117,14 +120,15 @@ def scatter_plot_2d(
         selected = dict(
                    marker = dict(
                             color = 'red')),
-        text = df['user_id'],
+        text = sasby['user_id'],
+        #text = df['user_id'],
         type = plot_type,      
     ) ]
     
     layout = dict(
         title = 'All Users',
         xaxis = dict(
-            title='video events',
+            title='attempted problems',
             type='log'),
         yaxis = dict(
             title='nshow_answer'),
@@ -162,11 +166,11 @@ def scatter_plot_2d(
     
     layout = go.Layout(title = 'All Users',
                       xaxis=dict(
-                           title='video events',
-                           type = 'log'),
+                           title='attempted problems',
+                           type = 'linear'),
                        yaxis=dict(
-                           title='nshow_answer * correct problems',
-                           type = 'log'),
+                           title='nshow_answer',
+                           type = 'linear'),
                       hovermode = 'closest')
     
     return dict( data=data, layout=layout )
@@ -549,30 +553,36 @@ def user_bar( user_dropdown_value ):
 def highlight_user( user_dropdown_value ):
 
     traces = [go.Scatter(
-            x = ((df['nseek_video']+ df['npause_video'])*df['nvideos_total_watched']), 
-            y = df['nshow_answer'], 
-            text=df['user_id'],
+            x = sasby['n_attempted'],
+            #x = ((df['nseek_video']+ df['npause_video'])*df['nvideos_total_watched']), 
+            y = sasby['n_show_answer_attempted'],
+            #y = df['nshow_answer'],
+            text = sasby['user_id'], 
+            #text=df['user_id'],
             name='User',
             mode='markers',
             marker={
                 'size': 15,
                 'opacity': 0.5,
-                'colorscale' : 'Viridis',
+                'colorscale' : COLORSCALE,
                 'reversescale' : True,
-                'color' : df['nevents'],
-                'colorbar' : dict( title = "nevents"),
+                'color': (sasby['n_partial'] - sasby['n_perfect']),
+                #'color' : df['nevents'],
+                'colorbar' : dict( title = "incorrect problems"),
             }
         )]
     
     if user_dropdown_value is not None:
         
         print("userID: ", user_dropdown_value)
-        row = df.loc[df['user_id']==int(user_dropdown_value)]
-        #sasrow = sasby.loc[sasby['user_id']==int(user_dropdown_value)]
+        #row = df.loc[df['user_id']==int(user_dropdown_value)]
+        sasrow = sasby.loc[sasby['user_id']==int(user_dropdown_value)]
 
         trace_selected = go.Scatter(
-            x = [((row['nseek_video']+row['npause_video'])*row['nvideos_total_watched']).iloc[0]],
-            y = [row['nshow_answer'].iloc[0]],
+            x = [sasrow['n_attempted'].iloc[0]],
+            #x = [((row['nseek_video']+row['npause_video'])*row['nvideos_total_watched']).iloc[0]],
+            y = [sasrow['n_show_answer_attempted'].iloc[0]],
+            #y = [row['nshow_answer'].iloc[0]],
             text=user_dropdown_value,
             showlegend=False,
             name='Selected',
@@ -591,12 +601,12 @@ def highlight_user( user_dropdown_value ):
             title='All Users',
             showlegend=False,
             xaxis={
-                'title': 'video events',
-                'type': 'log'
+                'title': 'attempted problems',
+                'type': 'linear'
             },
             yaxis={
                 'title': 'nshow_answer',
-                'type': 'log'
+                'type': 'linear'
             },
             margin={'l': 40, 'b': 40, 't': 0, 'r': 0},
             #height=450,
