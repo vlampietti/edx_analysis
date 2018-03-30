@@ -44,28 +44,6 @@ FROM `deidentified_data.show_ans_stat_by_user`"""
 sasby = gbq.read_gbq(query=quantiles, dialect ='standard', project_id=project_id)
 
 
-def add_markers( figure_data ):
-    index = 0
-    user_data = figure_data[0]
-    print(user_data)
-    index = user_data
-
-    index = dict(
-        marker = dict( 
-            color = 'red', 
-            size = 16,
-            opacity = 0.6
-            ),
-        type = plot_type
-        )
-
-    
-    if plot_type == 'histogram2d':
-        plot_type = 'scatter'
-    
-    return index
-
-
 BACKGROUND = 'rgb(230, 230, 230)'
 
 COLORSCALE = [ [0, "rgb(244,236,21)"], [0.3, "rgb(249,210,41)"], [0.4, "rgb(134,191,118)"], 
@@ -75,28 +53,13 @@ COLORSCALE = [ [0, "rgb(244,236,21)"], [0.3, "rgb(249,210,41)"], [0.4, "rgb(134,
 def scatter_plot_2d(
         x = sasby['n_attempted'], 
         y = sasby['n_show_answer_attempted'],
-        color = (sasby['n_partial'] - sasby['n_perfect']),
+        color = (sasby['n_partial'] - sasby['n_perfect']),    
         xlabel = 'attempted problems',
         ylabel = 'nshow_answer',
         title='All Users',
         plot_type = 'scatter',
         marker = '' ):
 
-    def axis_template_2d(title):
-        return dict(
-            backgroundcolor = BACKGROUND,
-            gridcolor = 'rgb(255, 255, 255)',
-            title = title,
-            zerolinecolor = 'rgb(255, 255, 255)',
-            color = '#444'
-        )        
-    
-    def blackout_axis( axis ):
-        axis['showgrid'] = False
-        axis['zeroline'] = False
-        axis['color']  = 'white'
-        return axis
-    
     data = [ dict(
         x = x,
         y = y,
@@ -106,7 +69,6 @@ def scatter_plot_2d(
                 colorbar = dict( title = "incorrect problems"),
                 line = dict( color = '#444' ),
                 reversescale = True,   
-                #sizeref = 10,
                 sizemode = 'diameter',
                 opacity = 0.7,                
                 size = 12,    
@@ -118,46 +80,8 @@ def scatter_plot_2d(
         text = sasby['user_id'],
         type = plot_type,      
     ) ]
-    
-    layout = dict(
-        title = 'All Users',
-        xaxis = dict(
-            title='attempted problems',
-            type='log'),
-        yaxis = dict(
-            title='nshow_answer'),
-        hovermode = 'closest',
-        margin = dict( r=0, t=0, l=0, b=0 ),
-        showlegend = False,
-        scene = dict(
-            xaxis = axis_template_2d( xlabel ),
-            yaxis = axis_template_2d( ylabel ),
-            camera = dict(
-                up=dict(x=0, y=0),
-                center=dict(x=0, y=0),
-                eye=dict(x=0.08, y=2.2)
-            )            
-        )
-    )
-    
-        
-    if plot_type == 'histogram2d':
-        # Scatter plot overlay on 2d Histogram
-        data[0]['type'] = 'scatter'
-        data.append( dict(
-                x = x,
-                y = y,
-                type = 'histogram2d',
-                colorscale = 'Greys',
-                showscale = False
-            ) )
-        layout['plot_bgcolor'] = 'black'
-        layout['paper_bgcolor'] = 'black'
-        layout['xaxis'] = blackout_axis(layout['xaxis'])
-        layout['yaxis'] = blackout_axis(layout['yaxis'])
-        layout['font']['color'] = 'white'
-        layout['title'] = 'All Users'
-    
+
+  
     layout = go.Layout(title = 'All Users',
                       xaxis=dict(
                            title='attempted problems',
@@ -165,10 +89,12 @@ def scatter_plot_2d(
                        yaxis=dict(
                            title='nshow_answer',
                            type = 'linear'),
-                      hovermode = 'closest')
+                      hovermode = 'closest',
+                      margin = dict( r=0, t=0, l=0, b=0 ),
+                      showlegend = False
+                      )
     
     return dict( data=data, layout=layout )
-
 
 def simple_donut(uid):
     user = sasby[sasby.user_id==int(uid)]
