@@ -51,11 +51,11 @@ COLORSCALE = [ [0, "rgb(244,236,21)"], [0.3, "rgb(249,210,41)"], [0.4, "rgb(134,
 
 
 def scatter_plot_2d(
-        x = sasby['n_attempted'], 
-        y = sasby['n_show_answer_attempted'],
-        color = (sasby['n_partial'] - sasby['n_perfect']),    
-        xlabel = 'attempted problems',
-        ylabel = 'nshow_answer',
+        x = df['nshow_answer'],
+        y = df['nvideo'],
+        color = df['ndays_act'],    
+        xlabel = 'nshow_answer',
+        ylabel = 'nvideo',
         title='All Users',
         plot_type = 'scatter',
         marker = '' ):
@@ -66,29 +66,26 @@ def scatter_plot_2d(
         mode = 'markers',
         marker = dict( 
                 colorscale = COLORSCALE,
-                colorbar = dict( title = "incorrect problems"),
+                colorbar = dict( title = "ndays_act"),
                 line = dict( color = '#444' ),
-                reversescale = True,   
+                reversescale = False,   
                 sizemode = 'diameter',
                 opacity = 0.7,                
                 size = 12,    
                 color = color
             ),
-        selected = dict(
-                   marker = dict(
-                            color = 'red')),
-        text = sasby['user_id'],
+        text = df['user_id'],
         type = plot_type,      
     ) ]
 
   
     layout = go.Layout(title = 'All Users',
                       xaxis=dict(
-                           title='attempted problems',
-                           type = 'linear'),
-                       yaxis=dict(
                            title='nshow_answer',
-                           type = 'linear'),
+                           type = 'log'),
+                       yaxis=dict(
+                           title='nvideo',
+                           type = 'log'),
                       hovermode = 'closest',
                       margin = dict( r=0, t=0, l=0, b=0 ),
                       showlegend = False
@@ -465,29 +462,30 @@ def user_bar( user_dropdown_value ):
 def highlight_user( user_dropdown_value ):
 
     traces = [go.Scatter(
-            x = sasby['n_attempted'],
-            y = sasby['n_show_answer_attempted'],
-            text = sasby['user_id'], 
+            x = df['nshow_answer'],
+            y = df['nvideo'],
+            text = df['user_id'], 
             name='User',
             mode='markers',
             marker={
                 'size': 15,
                 'opacity': 0.5,
                 'colorscale' : COLORSCALE,
-                'reversescale' : True,
-                'color': (sasby['n_partial'] - sasby['n_perfect']),
-                'colorbar' : dict( title = "incorrect problems"),
+                'reversescale' : False,
+                'color': df['ndays_act'],
+                'colorbar' : dict( title = "ndays_act"),
             }
         )]
     
     if user_dropdown_value is not None:
         
         print("userID: ", user_dropdown_value)
-        sasrow = sasby.loc[sasby['user_id']==int(user_dropdown_value)]
+
+        row = df.loc[df['user_id']==int(user_dropdown_value)]
 
         trace_selected = go.Scatter(
-            x = [sasrow['n_attempted'].iloc[0]],
-            y = [sasrow['n_show_answer_attempted'].iloc[0]],
+            x = [row['nshow_answer'].iloc[0]],
+            y = [row['nvideo'].iloc[0]],
             text=user_dropdown_value,
             showlegend=False,
             name='Selected',
@@ -506,15 +504,14 @@ def highlight_user( user_dropdown_value ):
             title='All Users',
             showlegend=False,
             xaxis={
-                'title': 'attempted problems',
-                'type': 'linear'
+                'title': 'nshow_answer',
+                'type': 'log'
             },
             yaxis={
-                'title': 'nshow_answer',
-                'type': 'linear'
+                'title': 'nvideo',
+                'type': 'log'
             },
             margin={'l': 40, 'b': 40, 't': 0, 'r': 0},
-            #height=450,
             hovermode='closest'
         )
     }
